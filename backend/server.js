@@ -19,6 +19,8 @@ const adminDepartmentRoutes = require("./routes/adminDepartmentRoutes")
 const adminDoctorRoutes = require("./routes/adminDoctorRoutes")
 const noticeRoutes = require("./routes/noticeRoutes")
 const appointmentRoutes = require("./routes/appointmentRoutes")
+const pharmacyRoutes = require("./routes/pharmacyRoutes")
+const bedRoutes = require("./routes/bedRoutes")
 const { runMigrations } = require("./controllers/adminDoctorController")
 
 app.use("/api/auth", authRoutes)
@@ -30,6 +32,8 @@ app.use("/api/admin-department", adminDepartmentRoutes)
 app.use("/api/admin-doctor", adminDoctorRoutes)
 app.use("/api/notice", noticeRoutes)
 app.use("/api/appointment", appointmentRoutes)
+app.use("/api/pharmacy", pharmacyRoutes)
+app.use("/api/bed", bedRoutes)
 
 // 404 handler
 app.use((req, res) => {

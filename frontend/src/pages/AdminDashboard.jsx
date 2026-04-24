@@ -8,6 +8,8 @@ import AdminNotices from "./AdminNotices"
 import AdminAppointments from "./AdminAppointments"
 import AdminReports from "./AdminReports"
 import AdminSettings from "./AdminSettings"
+import AdminPharmacy from "./AdminPharmacy"
+import AdminBeds from "./AdminBeds"
 
 const NO_HOSPITAL = (
   <div style={{ background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: "10px", padding: "16px" }}>
@@ -529,6 +531,12 @@ const AdminDashboard = () => {
 
       case "settings":
         return <AdminSettings adminData={adminData} hospitalData={hospitalData} onRefresh={fetchData} />
+
+      case "pharmacy":
+        return <AdminPharmacy hospitalId={hospitalData?.id} />
+
+      case "beds":
+        return <AdminBeds hospitalId={hospitalData?.id} />
 
       case "profile":
         return (

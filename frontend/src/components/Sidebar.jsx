@@ -76,6 +76,8 @@ const Sidebar = ({ activeTab, onTabChange, hospitalName }) => {
             {navLink("doctors", "👨⚕️", "Doctors")}
             {navLink("notices", "📢", "Notices")}
             {navLink("appointments", "📅", "Appointments")}
+            {navLink("pharmacy", "💊", "Pharmacy Stock")}
+            {navLink("beds", "🛏️", "Bed Management")}
             <hr />
             {navLink("reports", "📊", "Reports")}
             {navLink("settings", "⚙️", "Settings")}
