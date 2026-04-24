@@ -1,0 +1,7 @@
+node_modules/
+.env
+dist/
+dist-ssr/
+*.local
+*.log
+Krunal_Champanera-Hospital.system/
