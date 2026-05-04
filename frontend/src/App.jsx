@@ -8,9 +8,11 @@ import Profile from "./pages/Profile"
 import Departments from "./pages/Departments"
 import Designations from "./pages/Designations"
 import DoctorDashboard from "./pages/DoctorDashboard"
+import StaffDashboard from "./pages/StaffDashboard"
+import ForgotPassword from "./pages/ForgotPassword"
+import ResetPassword from "./pages/ResetPassword"
 import AdminManagement from "./pages/AdminManagement"
 import AdminRegistration from "./pages/AdminRegistration"
-import BookAppointment from "./pages/BookAppointment"
 import Reports from "./pages/Reports"
 import Settings from "./pages/Settings"
 
@@ -28,7 +30,6 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/book" element={<BookAppointment />} />
 
         <Route path="/dashboard" element={
           <ProtectedRoute allowedRole="super_admin"><Dashboard /></ProtectedRoute>
@@ -55,12 +56,18 @@ function App() {
           <ProtectedRoute allowedRole="super_admin"><Settings /></ProtectedRoute>
         } />
         <Route path="/register" element={<AdminRegistration />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/admin-dashboard" element={
           <ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>
         } />
 
         <Route path="/doctor-dashboard" element={
           <ProtectedRoute allowedRole="doctor"><DoctorDashboard /></ProtectedRoute>
+        } />
+
+        <Route path="/staff-dashboard" element={
+          <ProtectedRoute allowedRole="staff"><StaffDashboard /></ProtectedRoute>
         } />
 
         <Route path="/profile" element={

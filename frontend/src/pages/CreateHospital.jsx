@@ -3,6 +3,7 @@ import { Container, Row, Col, Form, Button, Alert, Card, Spinner } from "react-b
 import { useLocation, useNavigate } from "react-router-dom"
 import api from "../services/api"
 import MainLayout from "../layouts/MainLayout"
+import usePincode from "../hooks/usePincode"
 
 const CreateHospital = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ const CreateHospital = () => {
   })
 
   const [errors, setErrors] = useState({})
+  const { pincodeLoading, pincodeError, handlePincodeChange } = usePincode(setFormData, setErrors)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -269,46 +271,26 @@ const CreateHospital = () => {
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mb-4">
-                        <Form.Label className="fw-600 mb-2" style={{ color: "#2d3748" }}>
-                          City *
-                        </Form.Label>
+                        <Form.Label className="fw-600 mb-2" style={{ color: "#2d3748" }}>City *</Form.Label>
                         <Form.Control
-                          type="text"
-                          name="city"
-                          placeholder="City"
-                          value={formData.city}
-                          onChange={handleChange}
-                          isInvalid={!!errors.city}
+                          type="text" name="city" placeholder="City"
+                          value={formData.city} onChange={handleChange} isInvalid={!!errors.city}
                           className="form-control-lg"
-                          style={{ borderRadius: "8px", padding: "12px 15px" }}
+                          style={{ borderRadius: "8px", padding: "12px 15px", background: formData.city ? "#f0fff4" : "" }}
                         />
-                        {errors.city && (
-                          <Form.Control.Feedback type="invalid" className="d-block mt-2">
-                            {errors.city}
-                          </Form.Control.Feedback>
-                        )}
+                        {errors.city && <Form.Control.Feedback type="invalid" className="d-block mt-2">{errors.city}</Form.Control.Feedback>}
                       </Form.Group>
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mb-4">
-                        <Form.Label className="fw-600 mb-2" style={{ color: "#2d3748" }}>
-                          State *
-                        </Form.Label>
+                        <Form.Label className="fw-600 mb-2" style={{ color: "#2d3748" }}>State *</Form.Label>
                         <Form.Control
-                          type="text"
-                          name="state"
-                          placeholder="State"
-                          value={formData.state}
-                          onChange={handleChange}
-                          isInvalid={!!errors.state}
+                          type="text" name="state" placeholder="State"
+                          value={formData.state} onChange={handleChange} isInvalid={!!errors.state}
                           className="form-control-lg"
-                          style={{ borderRadius: "8px", padding: "12px 15px" }}
+                          style={{ borderRadius: "8px", padding: "12px 15px", background: formData.state ? "#f0fff4" : "" }}
                         />
-                        {errors.state && (
-                          <Form.Control.Feedback type="invalid" className="d-block mt-2">
-                            {errors.state}
-                          </Form.Control.Feedback>
-                        )}
+                        {errors.state && <Form.Control.Feedback type="invalid" className="d-block mt-2">{errors.state}</Form.Control.Feedback>}
                       </Form.Group>
                     </Col>
                   </Row>
@@ -317,24 +299,14 @@ const CreateHospital = () => {
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mb-4">
-                        <Form.Label className="fw-600 mb-2" style={{ color: "#2d3748" }}>
-                          Country *
-                        </Form.Label>
+                        <Form.Label className="fw-600 mb-2" style={{ color: "#2d3748" }}>Country *</Form.Label>
                         <Form.Control
-                          type="text"
-                          name="country"
-                          placeholder="Country"
-                          value={formData.country}
-                          onChange={handleChange}
-                          isInvalid={!!errors.country}
+                          type="text" name="country" placeholder="Country"
+                          value={formData.country} onChange={handleChange} isInvalid={!!errors.country}
                           className="form-control-lg"
-                          style={{ borderRadius: "8px", padding: "12px 15px" }}
+                          style={{ borderRadius: "8px", padding: "12px 15px", background: formData.country ? "#f0fff4" : "" }}
                         />
-                        {errors.country && (
-                          <Form.Control.Feedback type="invalid" className="d-block mt-2">
-                            {errors.country}
-                          </Form.Control.Feedback>
-                        )}
+                        {errors.country && <Form.Control.Feedback type="invalid" className="d-block mt-2">{errors.country}</Form.Control.Feedback>}
                       </Form.Group>
                     </Col>
                     <Col md={6}>
@@ -342,16 +314,21 @@ const CreateHospital = () => {
                         <Form.Label className="fw-600 mb-2" style={{ color: "#2d3748" }}>
                           Pin Code *
                         </Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="pincode"
-                          placeholder="Pin code"
-                          value={formData.pincode}
-                          onChange={handleChange}
-                          isInvalid={!!errors.pincode}
-                          className="form-control-lg"
-                          style={{ borderRadius: "8px", padding: "12px 15px" }}
-                        />
+                        <div style={{ position: "relative" }}>
+                          <Form.Control
+                            type="text"
+                            name="pincode"
+                            placeholder="Enter pin code"
+                            value={formData.pincode}
+                            onChange={handlePincodeChange}
+                            isInvalid={!!errors.pincode}
+                            className="form-control-lg"
+                            style={{ borderRadius: "8px", padding: "12px 15px" }}
+                            maxLength={10}
+                          />
+                          {pincodeLoading && <Spinner animation="border" size="sm" style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "#667eea" }} />}
+                        </div>
+                        {pincodeError && <div style={{ color: "#e53e3e", fontSize: "0.8rem", marginTop: 4 }}>{pincodeError}</div>}
                         {errors.pincode && (
                           <Form.Control.Feedback type="invalid" className="d-block mt-2">
                             {errors.pincode}

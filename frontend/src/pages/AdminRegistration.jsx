@@ -2,10 +2,12 @@ import { useState } from "react"
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from "react-bootstrap"
 import { useNavigate } from "react-router-dom"
 import api from "../services/api"
+import usePincode from "../hooks/usePincode"
 
 const AdminRegistration = () => {
-  const [form, setForm] = useState({ full_name: "", email: "", phone: "" })
+  const [form, setForm] = useState({ full_name: "", email: "", phone: "", pincode: "", city: "", state: "", country: "" })
   const [errors, setErrors] = useState({})
+  const { pincodeLoading, pincodeError, handlePincodeChange } = usePincode(setForm, setErrors)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState("")
   const [error, setError] = useState("")
@@ -18,6 +20,7 @@ const AdminRegistration = () => {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = "Invalid email format"
     if (!form.phone.trim()) newErrors.phone = "Phone number is required"
     else if (!/^\d{10,15}$/.test(form.phone.replace(/\s/g, ""))) newErrors.phone = "Enter a valid phone number"
+    if (!form.pincode.trim()) newErrors.pincode = "Pin code is required"
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -37,7 +40,7 @@ const AdminRegistration = () => {
       const res = await api.post("/registration", form)
       if (res.data.success) {
         setSuccess(res.data.message)
-        setForm({ full_name: "", email: "", phone: "" })
+        setForm({ full_name: "", email: "", phone: "", pincode: "", city: "", state: "", country: "" })
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to submit registration")
@@ -47,10 +50,7 @@ const AdminRegistration = () => {
   }
 
   return (
-    <div
-      className="min-vh-100 d-flex align-items-center"
-      style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}
-    >
+    <div className="min-vh-100 d-flex align-items-center" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
       <Container>
         <Row className="justify-content-center">
           <Col md={6} sm={9} xs={11}>
@@ -68,20 +68,14 @@ const AdminRegistration = () => {
                     <div className="mt-2 small">You will receive an email once the Super Admin reviews your request.</div>
                   </Alert>
                 )}
-                {error && (
-                  <Alert variant="danger" dismissible onClose={() => setError("")}>{error}</Alert>
-                )}
+                {error && <Alert variant="danger" dismissible onClose={() => setError("")}>{error}</Alert>}
 
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">
                     <Form.Label className="fw-semibold" style={{ color: "#2d3748" }}>Full Name *</Form.Label>
                     <Form.Control
-                      type="text"
-                      name="full_name"
-                      placeholder="Enter your full name"
-                      value={form.full_name}
-                      onChange={handleChange}
-                      isInvalid={!!errors.full_name}
+                      type="text" name="full_name" placeholder="Enter your full name"
+                      value={form.full_name} onChange={handleChange} isInvalid={!!errors.full_name}
                       style={{ borderRadius: "8px", padding: "10px 14px" }}
                     />
                     <Form.Control.Feedback type="invalid">{errors.full_name}</Form.Control.Feedback>
@@ -90,42 +84,67 @@ const AdminRegistration = () => {
                   <Form.Group className="mb-3">
                     <Form.Label className="fw-semibold" style={{ color: "#2d3748" }}>Email Address *</Form.Label>
                     <Form.Control
-                      type="email"
-                      name="email"
-                      placeholder="Enter your email"
-                      value={form.email}
-                      onChange={handleChange}
-                      isInvalid={!!errors.email}
+                      type="email" name="email" placeholder="Enter your email"
+                      value={form.email} onChange={handleChange} isInvalid={!!errors.email}
                       style={{ borderRadius: "8px", padding: "10px 14px" }}
                     />
                     <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                   </Form.Group>
 
-                  <Form.Group className="mb-4">
+                  <Form.Group className="mb-3">
                     <Form.Label className="fw-semibold" style={{ color: "#2d3748" }}>Phone Number *</Form.Label>
                     <Form.Control
-                      type="text"
-                      name="phone"
-                      placeholder="Enter your phone number"
-                      value={form.phone}
-                      onChange={handleChange}
-                      isInvalid={!!errors.phone}
+                      type="text" name="phone" placeholder="Enter your phone number"
+                      value={form.phone} onChange={handleChange} isInvalid={!!errors.phone}
                       style={{ borderRadius: "8px", padding: "10px 14px" }}
                     />
                     <Form.Control.Feedback type="invalid">{errors.phone}</Form.Control.Feedback>
                   </Form.Group>
 
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-semibold" style={{ color: "#2d3748" }}>Pin Code *</Form.Label>
+                    <div style={{ position: "relative" }}>
+                      <Form.Control
+                        type="text" name="pincode" placeholder="Enter pin code"
+                        value={form.pincode} onChange={handlePincodeChange} isInvalid={!!errors.pincode}
+                        style={{ borderRadius: "8px", padding: "10px 14px" }} maxLength={10}
+                      />
+                      {pincodeLoading && <Spinner animation="border" size="sm" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#667eea" }} />}
+                    </div>
+                    {pincodeError && <div style={{ color: "#e53e3e", fontSize: "0.8rem", marginTop: 4 }}>{pincodeError}</div>}
+                    <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
+                  </Form.Group>
+
+                  <Row className="mb-4 g-2">
+                    <Col md={4}>
+                      <Form.Label className="fw-semibold" style={{ color: "#2d3748", fontSize: ".85rem" }}>City</Form.Label>
+                      <Form.Control
+                        type="text" name="city" placeholder="City"
+                        value={form.city} onChange={handleChange}
+                        style={{ borderRadius: "8px", padding: "10px 14px", background: form.city ? "#f0fff4" : "" }}
+                      />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Label className="fw-semibold" style={{ color: "#2d3748", fontSize: ".85rem" }}>State</Form.Label>
+                      <Form.Control
+                        type="text" name="state" placeholder="State"
+                        value={form.state} onChange={handleChange}
+                        style={{ borderRadius: "8px", padding: "10px 14px", background: form.state ? "#f0fff4" : "" }}
+                      />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Label className="fw-semibold" style={{ color: "#2d3748", fontSize: ".85rem" }}>Country</Form.Label>
+                      <Form.Control
+                        type="text" name="country" placeholder="Country"
+                        value={form.country} onChange={handleChange}
+                        style={{ borderRadius: "8px", padding: "10px 14px", background: form.country ? "#f0fff4" : "" }}
+                      />
+                    </Col>
+                  </Row>
+
                   <Button
-                    type="submit"
-                    size="lg"
-                    disabled={loading}
-                    className="w-100 fw-bold"
-                    style={{
-                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      border: "none",
-                      borderRadius: "8px",
-                      padding: "12px"
-                    }}
+                    type="submit" size="lg" disabled={loading} className="w-100 fw-bold"
+                    style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", border: "none", borderRadius: "8px", padding: "12px" }}
                   >
                     {loading ? <><Spinner as="span" animation="border" size="sm" className="me-2" />Submitting...</> : "Submit Registration"}
                   </Button>
@@ -133,10 +152,7 @@ const AdminRegistration = () => {
 
                 <div className="text-center mt-4">
                   <p className="text-muted small">Already have an account?{" "}
-                    <span
-                      style={{ color: "#667eea", cursor: "pointer", fontWeight: "600" }}
-                      onClick={() => navigate("/")}
-                    >
+                    <span style={{ color: "#667eea", cursor: "pointer", fontWeight: "600" }} onClick={() => navigate("/")}>
                       Login here
                     </span>
                   </p>

@@ -1,5 +1,36 @@
 const db = require("../config/db")
 
+const DEFAULT_DEPARTMENTS = [
+  "Emergency & Trauma", "Outpatient Department (OPD)", "Inpatient Department (IPD)",
+  "Intensive Care Unit (ICU)", "Neonatal ICU (NICU)", "Pediatric ICU (PICU)",
+  "Cardiology", "Cardiac Surgery", "Neurology", "Neurosurgery",
+  "Orthopedics", "General Surgery", "Plastic & Reconstructive Surgery",
+  "Obstetrics & Gynecology", "Pediatrics", "Neonatology",
+  "Oncology", "Radiation Oncology", "Hematology",
+  "Gastroenterology", "Hepatology", "Nephrology", "Urology",
+  "Pulmonology", "Endocrinology", "Rheumatology", "Dermatology",
+  "Ophthalmology", "ENT (Ear, Nose & Throat)", "Dentistry",
+  "Psychiatry & Mental Health", "Physiotherapy & Rehabilitation",
+  "Radiology & Imaging", "Pathology & Laboratory", "Blood Bank",
+  "Pharmacy", "Anesthesiology", "Operation Theatre",
+  "Dietetics & Nutrition", "Medical Records", "Administration & HR"
+]
+
+exports.seedDepartments = () => new Promise((resolve) => {
+  db.query("SELECT name FROM departments", (err, rows) => {
+    if (err) return resolve()
+    const existing = new Set(rows.map(r => r.name.toLowerCase()))
+    const toInsert = DEFAULT_DEPARTMENTS.filter(n => !existing.has(n.toLowerCase()))
+    const done = () => db.query("UPDATE departments SET status = 'Active'", () => resolve())
+    if (!toInsert.length) return done()
+    const values = toInsert.map(name => [name, null, null, "Active"])
+    db.query("INSERT INTO departments (name, description, image, status) VALUES ?", [values], (e) => {
+      if (e) console.error("Department seed error:", e.message)
+      else console.log(`Seeded ${toInsert.length} departments`)
+      done()
+    })
+  })
+})
 
 exports.createDepartment = (req, res) => {
   const { name, description, status } = req.body

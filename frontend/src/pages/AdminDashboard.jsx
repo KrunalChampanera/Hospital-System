@@ -4,12 +4,9 @@ import MainLayout from "../layouts/MainLayout"
 import api from "../services/api"
 import AdminDepartments from "./AdminDepartments"
 import AdminDoctors from "./AdminDoctors"
-import AdminNotices from "./AdminNotices"
-import AdminAppointments from "./AdminAppointments"
+import AdminStaff from "./AdminStaff"
 import AdminReports from "./AdminReports"
 import AdminSettings from "./AdminSettings"
-import AdminPharmacy from "./AdminPharmacy"
-import AdminBeds from "./AdminBeds"
 
 const NO_HOSPITAL = (
   <div style={{ background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: "10px", padding: "16px" }}>
@@ -48,7 +45,8 @@ const AdminDashboard = () => {
   const [passwordData, setPasswordData] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" })
   const [changingPassword, setChangingPassword] = useState(false)
 
-  const [dashStats, setDashStats] = useState({ doctors: 0, activeDoctors: 0, departments: 0, notices: 0 })
+  const [dashStats, setDashStats] = useState({ doctors: 0, activeDoctors: 0, departments: 0 })
+  const [infoDoctors, setInfoDoctors] = useState([])
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}")
@@ -85,21 +83,26 @@ const AdminDashboard = () => {
 
   const fetchDashStats = async (hospitalId) => {
     try {
-      const [d, dep, n] = await Promise.all([
+      const [d, dep] = await Promise.all([
         api.get(`/admin-doctor/hospital/${hospitalId}`),
-        api.get(`/admin-department/${hospitalId}`),
-        api.get(`/notice/${hospitalId}`)
+        api.get(`/admin-department/${hospitalId}`)
       ])
+      const doctorList = d.data.success ? d.data.data : []
+      setInfoDoctors(doctorList)
       setDashStats({
-        doctors: d.data.success ? d.data.data.length : 0,
-        activeDoctors: d.data.success ? d.data.data.filter(x => x.status === "Active").length : 0,
-        departments: dep.data.success ? dep.data.data.length : 0,
-        notices: n.data.success ? n.data.data.filter(x => x.status === "Active").length : 0
+        doctors: doctorList.length,
+        activeDoctors: doctorList.filter(x => x.status === "Active").length,
+        departments: dep.data.success ? dep.data.data.length : 0
       })
     } catch {}
   }
 
   const getAdminId = () => JSON.parse(localStorage.getItem("user") || "{}").id
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    if (tab === "info" && hospitalData?.id) fetchDashStats(hospitalData.id)
+  }
 
   const saveFacilitiesToDB = async (list) => {
     await api.put(`/hospital/${hospitalData.id}/facilities`, { facilities: list.join(", ") })
@@ -227,7 +230,6 @@ const AdminDashboard = () => {
           { label: "Total Doctors", value: dashStats.doctors, icon: "👨⚕️", bg: "#EFF6FF", color: "#2563EB", tab: "doctors" },
           { label: "Active Doctors", value: dashStats.activeDoctors, icon: "✅", bg: "#F0FDF4", color: "#16A34A", tab: "doctors" },
           { label: "Departments", value: dashStats.departments, icon: "🏢", bg: "#FDF4FF", color: "#9333EA", tab: "departments" },
-          { label: "Active Notices", value: dashStats.notices, icon: "📢", bg: "#FFF7ED", color: "#EA580C", tab: "notices" },
         ]
         return (
           <>
@@ -287,64 +289,145 @@ const AdminDashboard = () => {
         )
       }
 
-      case "info":
+      case "info": {
+        const sectionCard = { border: "none", borderRadius: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", marginBottom: "20px" }
+        const labelStyle = { fontSize: "11px", color: "#94A3B8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }
+        const valueStyle = { fontSize: "14px", fontWeight: "500", color: "#1E293B" }
         return (
           <>
-            <h5 className="fw-bold mb-4">🏥 Hospital Information</h5>
+            <h5 style={{ fontWeight: "700", color: "#0F172A", marginBottom: "20px" }}>🏥 Hospital Information</h5>
             {!hospitalData ? NO_HOSPITAL : (
               <>
-                {hospitalData.logo && (
-                  <div className="mb-4">
-                    <img src={`http://localhost:5000${hospitalData.logo}`} alt="Hospital Logo"
-                      style={{ height: "80px", objectFit: "contain", borderRadius: "8px", border: "1px solid #ddd", padding: "4px" }} />
-                  </div>
-                )}
-                <Row>
-                  {[
-                    ["Hospital Name", hospitalData.clinic_name],
-                    ["Address", hospitalData.address],
-                    ["City", hospitalData.city],
-                    ["State", hospitalData.state],
-                    ["Country", hospitalData.country],
-                    ["Pincode", hospitalData.pincode],
-                    ["Status", hospitalData.status],
-                    ["Opening Time", hospitalData.opening_time],
-                    ["Closing Time", hospitalData.closing_time],
-                    ["Weekend Open", hospitalData.weekend_open ? "Yes" : "No"],
-                    ["Weekend Opening", hospitalData.weekend_opening_time],
-                    ["Weekend Closing", hospitalData.weekend_closing_time],
-                  ].map(([label, value]) => (
-                    <Col md={6} className="mb-3" key={label}>
-                      <div className="text-muted small">{label}</div>
-                      <div className="fw-semibold">{value || "N/A"}</div>
-                    </Col>
-                  ))}
+                {/* Header with logo */}
+                <Card style={sectionCard}>
+                  <Card.Body className="p-4">
+                    <div className="d-flex align-items-center gap-4">
+                      {hospitalData.logo
+                        ? <img src={`http://localhost:5000${hospitalData.logo}`} alt="logo" style={{ height: "80px", width: "80px", objectFit: "contain", borderRadius: "12px", border: "1px solid #E2E8F0", padding: "6px" }} />
+                        : <div style={{ height: "80px", width: "80px", borderRadius: "12px", background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px" }}>🏥</div>
+                      }
+                      <div>
+                        <h4 style={{ fontWeight: "700", color: "#0F172A", margin: 0 }}>{hospitalData.clinic_name}</h4>
+                        <p style={{ color: "#64748B", fontSize: "14px", margin: "4px 0 8px" }}>{[hospitalData.address, hospitalData.city, hospitalData.state, hospitalData.country].filter(Boolean).join(", ")}</p>
+                        <span style={{ background: hospitalData.status === "Active" ? "#F0FDF4" : "#FEF2F2", color: hospitalData.status === "Active" ? "#16A34A" : "#DC2626", border: `1px solid ${hospitalData.status === "Active" ? "#BBF7D0" : "#FECACA"}`, borderRadius: "20px", padding: "3px 12px", fontSize: "12px", fontWeight: "600" }}>
+                          {hospitalData.status || "Active"}
+                        </span>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+
+                {/* Basic Info */}
+                <Card style={sectionCard}>
+                  <Card.Body className="p-4">
+                    <div style={{ fontWeight: "600", color: "#0F172A", marginBottom: "16px", fontSize: "14px" }}>📋 Basic Details</div>
+                    <Row>
+                      {[
+                        ["Hospital Name", hospitalData.clinic_name],
+                        ["Address", hospitalData.address],
+                        ["City", hospitalData.city],
+                        ["State", hospitalData.state],
+                        ["Country", hospitalData.country],
+                        ["Pincode", hospitalData.pincode],
+                      ].map(([label, value]) => (
+                        <Col md={4} className="mb-3" key={label}>
+                          <div style={labelStyle}>{label}</div>
+                          <div style={valueStyle}>{value || "N/A"}</div>
+                        </Col>
+                      ))}
+                    </Row>
+                  </Card.Body>
+                </Card>
+
+                {/* Hours */}
+                <Card style={sectionCard}>
+                  <Card.Body className="p-4">
+                    <div style={{ fontWeight: "600", color: "#0F172A", marginBottom: "16px", fontSize: "14px" }}>🕐 Opening Hours</div>
+                    <Row>
+                      {[
+                        ["Opening Time", hospitalData.opening_time],
+                        ["Closing Time", hospitalData.closing_time],
+                        ["Weekend Open", hospitalData.weekend_open ? "Yes" : "No"],
+                        ["Weekend Opening", hospitalData.weekend_opening_time],
+                        ["Weekend Closing", hospitalData.weekend_closing_time],
+                      ].map(([label, value]) => (
+                        <Col md={4} className="mb-3" key={label}>
+                          <div style={labelStyle}>{label}</div>
+                          <div style={valueStyle}>{value || "N/A"}</div>
+                        </Col>
+                      ))}
+                    </Row>
+                  </Card.Body>
+                </Card>
+
+                {/* Facilities & Activities */}
+                <Row className="g-3 mb-3">
+                  <Col md={6}>
+                    <Card style={{ ...sectionCard, marginBottom: 0, height: "100%" }}>
+                      <Card.Body className="p-4">
+                        <div style={{ fontWeight: "600", color: "#0F172A", marginBottom: "12px", fontSize: "14px" }}>🛏️ Facilities</div>
+                        {facilitiesList.length === 0 ? <p style={{ color: "#94A3B8", fontSize: "13px" }}>No facilities added yet.</p> : (
+                          <div className="d-flex flex-wrap gap-2">
+                            {facilitiesList.map((f, i) => (
+                              <span key={i} style={{ background: "#EEF2FF", color: "#4F46E5", border: "1px solid #C7D2FE", borderRadius: "20px", padding: "4px 14px", fontSize: "13px", fontWeight: "500" }}>{f}</span>
+                            ))}
+                          </div>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                  <Col md={6}>
+                    <Card style={{ ...sectionCard, marginBottom: 0, height: "100%" }}>
+                      <Card.Body className="p-4">
+                        <div style={{ fontWeight: "600", color: "#0F172A", marginBottom: "12px", fontSize: "14px" }}>📋 Activities</div>
+                        {activitiesList.length === 0 ? <p style={{ color: "#94A3B8", fontSize: "13px" }}>No activities added yet.</p> : (
+                          <div className="d-flex flex-wrap gap-2">
+                            {activitiesList.map((a, i) => (
+                              <span key={i} style={{ background: "#ECFDF5", color: "#059669", border: "1px solid #A7F3D0", borderRadius: "20px", padding: "4px 14px", fontSize: "13px", fontWeight: "500" }}>{a}</span>
+                            ))}
+                          </div>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Col>
                 </Row>
-                <hr />
-                <div className="mb-4">
-                  <div className="fw-semibold mb-2">🛏️ Facilities</div>
-                  {facilitiesList.length === 0 ? <p className="text-muted small">No facilities added yet.</p> : (
-                    <div className="d-flex flex-wrap gap-2">
-                      {facilitiesList.map((f, i) => (
-                        <span key={i} style={{ background: "#EEF2FF", color: "#4F46E5", border: "1px solid #C7D2FE", borderRadius: "20px", padding: "4px 14px", fontSize: "13px", fontWeight: "500" }}>{f}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <div className="fw-semibold mb-2">📋 Activities</div>
-                  {activitiesList.length === 0 ? <p className="text-muted small">No activities added yet.</p> : (
-                    <div className="d-flex flex-wrap gap-2">
-                      {activitiesList.map((a, i) => (
-                        <span key={i} style={{ background: "#ECFDF5", color: "#059669", border: "1px solid #A7F3D0", borderRadius: "20px", padding: "4px 14px", fontSize: "13px", fontWeight: "500" }}>{a}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+
+                {/* Doctors */}
+                <Card style={{ ...sectionCard, marginBottom: 0 }}>
+                  <Card.Body className="p-4">
+                    <div style={{ fontWeight: "600", color: "#0F172A", marginBottom: "16px", fontSize: "14px" }}>👨‍⚕️ Our Doctors ({infoDoctors.length})</div>
+                    {infoDoctors.length === 0 ? (
+                      <p style={{ color: "#94A3B8", fontSize: "13px" }}>No doctors added yet.</p>
+                    ) : (
+                      <Row className="g-3">
+                        {infoDoctors.map(doc => (
+                          <Col md={4} sm={6} key={doc.id}>
+                            <div style={{ border: "1px solid #F1F5F9", borderRadius: "12px", padding: "16px", display: "flex", alignItems: "center", gap: "12px" }}>
+                              {doc.photo
+                                ? <img src={`http://localhost:5000${doc.photo}`} alt={doc.name} style={{ width: "52px", height: "52px", borderRadius: "50%", objectFit: "cover", border: "2px solid #E2E8F0", flexShrink: 0 }} />
+                                : <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }}>👨‍⚕️</div>
+                              }
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontWeight: "600", color: "#0F172A", fontSize: "13.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Dr. {doc.name}</div>
+                                <div style={{ fontSize: "12px", color: "#64748B", marginTop: "2px" }}>{doc.designation_name || doc.department_name || "—"}</div>
+                                <div className="d-flex gap-1 mt-1 flex-wrap">
+                                  {doc.online_consultation ? <span style={{ background: "#F0FDF4", color: "#059669", border: "1px solid #BBF7D0", borderRadius: "20px", padding: "1px 8px", fontSize: "11px", fontWeight: "500" }}>🌐 Online</span> : null}
+                                  {doc.offline_consultation ? <span style={{ background: "#EFF6FF", color: "#2563EB", border: "1px solid #BFDBFE", borderRadius: "20px", padding: "1px 8px", fontSize: "11px", fontWeight: "500" }}>🏥 Offline</span> : null}
+                                  <span style={{ background: doc.status === "Active" ? "#F0FDF4" : "#FEF2F2", color: doc.status === "Active" ? "#16A34A" : "#DC2626", border: `1px solid ${doc.status === "Active" ? "#BBF7D0" : "#FECACA"}`, borderRadius: "20px", padding: "1px 8px", fontSize: "11px", fontWeight: "500" }}>{doc.status}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </Col>
+                        ))}
+                      </Row>
+                    )}
+                  </Card.Body>
+                </Card>
               </>
             )}
           </>
         )
+      }
 
       case "facilities":
         return (
@@ -520,23 +603,14 @@ const AdminDashboard = () => {
           </>
         )
 
-      case "notices":
-        return <AdminNotices hospitalId={hospitalData?.id} />
-
-      case "appointments":
-        return <AdminAppointments hospitalId={hospitalData?.id} />
+      case "staff":
+        return <AdminStaff hospitalId={hospitalData?.id} />
 
       case "reports":
         return <AdminReports hospitalId={hospitalData?.id} hospitalData={hospitalData} />
 
       case "settings":
         return <AdminSettings adminData={adminData} hospitalData={hospitalData} onRefresh={fetchData} />
-
-      case "pharmacy":
-        return <AdminPharmacy hospitalId={hospitalData?.id} />
-
-      case "beds":
-        return <AdminBeds hospitalId={hospitalData?.id} />
 
       case "profile":
         return (
@@ -595,7 +669,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <MainLayout activeTab={activeTab} onTabChange={setActiveTab} hospitalName={hospitalData?.clinic_name}>
+    <MainLayout activeTab={activeTab} onTabChange={handleTabChange} hospitalName={hospitalData?.clinic_name}>
       <Container fluid>
         {error && <Alert variant="danger" dismissible onClose={() => setError("")}>{error}</Alert>}
         {successMsg && <Alert variant="success" dismissible onClose={() => setSuccessMsg("")}>{successMsg}</Alert>}

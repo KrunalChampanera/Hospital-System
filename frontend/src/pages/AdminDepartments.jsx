@@ -4,6 +4,16 @@ import api from "../services/api"
 
 const ITEMS_PER_PAGE = 5
 
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", flex: 1, minWidth: 130 }}>
+    <div style={{ width: 40, height: 40, borderRadius: 10, background: color + "18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "#0F172A", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>{label}</div>
+    </div>
+  </div>
+)
+
 const AdminDepartments = ({ hospitalId }) => {
   const [rows, setRows] = useState([])
   const [activeDepts, setActiveDepts] = useState([])
@@ -16,7 +26,7 @@ const AdminDepartments = ({ hospitalId }) => {
   const [showModal, setShowModal] = useState(false)
   const [editData, setEditData] = useState(null)
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ department_id: "", description: "", no_of_doctors: "", no_of_beds: "", no_of_wards: "", status: "Active" })
+  const [form, setForm] = useState({ department_id: "", description: "", no_of_doctors: "", status: "Active" })
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -54,8 +64,6 @@ const AdminDepartments = ({ hospitalId }) => {
       department_id: row.department_id,
       description: row.description || "",
       no_of_doctors: row.no_of_doctors,
-      no_of_beds: row.no_of_beds,
-      no_of_wards: row.no_of_wards,
       status: row.status
     })
     setShowModal(true)
@@ -132,6 +140,15 @@ const AdminDepartments = ({ hospitalId }) => {
       {error && <Alert variant="danger" dismissible onClose={() => setError("")} style={{ borderRadius: "10px", fontSize: "13.5px" }}><strong>Error:</strong> {error}</Alert>}
       {successMsg && <Alert variant="success" dismissible onClose={() => setSuccessMsg("")} style={{ borderRadius: "10px", fontSize: "13.5px" }}>{successMsg}</Alert>}
 
+      {/* Activity Stats */}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
+        <StatCard icon="🏢" label="Total Departments" value={rows.length} color="#2563EB" />
+        <StatCard icon="✅" label="Active" value={rows.filter(r => r.status === "Active").length} color="#16A34A" />
+        <StatCard icon="⏸️" label="Inactive" value={rows.filter(r => r.status === "Inactive").length} color="#EA580C" />
+        <StatCard icon="🩺" label="Total Doctors" value={rows.reduce((s, r) => s + (Number(r.no_of_doctors) || 0), 0)} color="#0EA5E9" />
+        <StatCard icon="🏥" label="Total Wards" value={rows.reduce((s, r) => s + (Number(r.no_of_wards) || 0), 0)} color="#F59E0B" />
+      </div>
+
       <Card style={styles.card}>
         {/* Header */}
         <div style={styles.header}>
@@ -180,8 +197,6 @@ const AdminDepartments = ({ hospitalId }) => {
                   <th style={{ ...styles.th, width: "22%" }}>Department</th>
                   <th style={{ ...styles.th, width: "25%" }}>Description</th>
                   <th style={{ ...styles.th, width: "10%" }}>Doctors</th>
-                  <th style={{ ...styles.th, width: "10%" }}>Beds</th>
-                  <th style={{ ...styles.th, width: "10%" }}>Wards</th>
                   <th style={{ ...styles.th, width: "13%" }}>Status</th>
                   <th style={{ ...styles.th, width: "10%" }}>Action</th>
                 </tr>
@@ -196,8 +211,6 @@ const AdminDepartments = ({ hospitalId }) => {
                       </span>
                     </td>
                     <td style={styles.td}>{row.no_of_doctors}</td>
-                    <td style={styles.td}>{row.no_of_beds}</td>
-                    <td style={styles.td}>{row.no_of_wards}</td>
                     <td style={styles.td}>
                       <span style={styles.statusBadge(row.status === "Active")} onClick={() => handleToggleStatus(row)} title="Click to toggle" role="button">
                         <span style={styles.dot(row.status === "Active")} />
@@ -274,20 +287,10 @@ const AdminDepartments = ({ hospitalId }) => {
             <Form.Control as="textarea" rows={3} placeholder="Describe this department..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ resize: "none" }} />
           </Form.Group>
 
-          <Row className="mb-3">
-            <Col>
-              <Form.Label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", marginBottom: "6px" }}>No. of Doctors</Form.Label>
-              <Form.Control type="number" min="0" value={form.no_of_doctors} onChange={e => setForm({ ...form, no_of_doctors: e.target.value })} style={{ height: "40px" }} />
-            </Col>
-            <Col>
-              <Form.Label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", marginBottom: "6px" }}>No. of Beds</Form.Label>
-              <Form.Control type="number" min="0" value={form.no_of_beds} onChange={e => setForm({ ...form, no_of_beds: e.target.value })} style={{ height: "40px" }} />
-            </Col>
-            <Col>
-              <Form.Label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", marginBottom: "6px" }}>No. of Wards</Form.Label>
-              <Form.Control type="number" min="0" value={form.no_of_wards} onChange={e => setForm({ ...form, no_of_wards: e.target.value })} style={{ height: "40px" }} />
-            </Col>
-          </Row>
+          <Form.Group className="mb-3">
+            <Form.Label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", marginBottom: "6px" }}>No. of Doctors</Form.Label>
+            <Form.Control type="number" min="0" value={form.no_of_doctors} onChange={e => setForm({ ...form, no_of_doctors: e.target.value })} style={{ height: "40px" }} />
+          </Form.Group>
 
           <Form.Group>
             <Form.Label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", marginBottom: "6px" }}>Status</Form.Label>

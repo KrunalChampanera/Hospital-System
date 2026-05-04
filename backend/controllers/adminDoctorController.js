@@ -71,8 +71,7 @@ exports.getDoctors = (req, res) => {
        dep.name AS department_name,
        des.name AS designation_name
      FROM doctors d
-     LEFT JOIN hospital_departments hd ON hd.id = d.department_id
-     LEFT JOIN departments dep ON dep.id = hd.department_id
+     LEFT JOIN departments dep ON dep.id = d.department_id
      LEFT JOIN designations des ON des.id = d.designation_id
      WHERE d.hospital_id = ?
      ORDER BY d.id DESC`,
@@ -89,8 +88,7 @@ exports.getDoctorById = (req, res) => {
   db.query(
     `SELECT d.*, dep.name AS department_name, des.name AS designation_name
      FROM doctors d
-     LEFT JOIN hospital_departments hd ON hd.id = d.department_id
-     LEFT JOIN departments dep ON dep.id = hd.department_id
+     LEFT JOIN departments dep ON dep.id = d.department_id
      LEFT JOIN designations des ON des.id = d.designation_id
      WHERE d.id = ?`,
     [id],

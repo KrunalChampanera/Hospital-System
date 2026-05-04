@@ -8,13 +8,8 @@ const DoctorDashboard = () => {
   const [doctorData, setDoctorData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [notices, setNotices] = useState([])
   const [appointments, setAppointments] = useState([])
   const [apptLoading, setApptLoading] = useState(false)
-  const [seenIds, setSeenIds] = useState(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}")
-    return JSON.parse(localStorage.getItem(`seen_notices_${user.id}`) || "[]")
-  })
   const [pwData, setPwData] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" })
   const [pwLoading, setPwLoading] = useState(false)
   const [pwError, setPwError] = useState("")
@@ -28,11 +23,6 @@ const DoctorDashboard = () => {
       .then(res => {
         if (res.data.success) {
           setDoctorData(res.data.data)
-          if (res.data.data?.hospital_id) {
-            api.get(`/notice/${res.data.data.hospital_id}`)
-              .then(n => { if (n.data.success) setNotices(n.data.data.filter(x => x.status === "Active")) })
-              .catch(() => {})
-          }
           if (res.data.data?.id) {
             setApptLoading(true)
             api.get(`/appointment/doctor/${res.data.data.id}`)
@@ -86,17 +76,8 @@ const DoctorDashboard = () => {
     try { return doctorData?.education ? (typeof doctorData.education === "string" ? JSON.parse(doctorData.education) : doctorData.education) : [] } catch { return [] }
   }
 
-  const unreadCount = notices.filter(n => !seenIds.includes(n.id)).length
-
-  const markAllSeen = () => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}")
-    const allIds = notices.map(n => n.id)
-    localStorage.setItem(`seen_notices_${user.id}`, JSON.stringify(allIds))
-    setSeenIds(allIds)
-  }
-
-  const navLink = (tab, icon, label, badge) => (
-    <Nav.Link key={tab} onClick={() => { setActiveTab(tab); if (tab === "notices") markAllSeen() }}
+  const navLink = (tab, icon, label) => (
+    <Nav.Link key={tab} onClick={() => setActiveTab(tab)}
       style={{
         cursor: "pointer", fontWeight: activeTab === tab ? "600" : "normal",
         color: activeTab === tab ? "#0d6efd" : "#333",
@@ -105,11 +86,6 @@ const DoctorDashboard = () => {
         display: "flex", alignItems: "center", justifyContent: "space-between"
       }}>
       <span>{icon} {label}</span>
-      {badge > 0 && (
-        <span style={{ background: "#EF4444", color: "#fff", borderRadius: "20px", fontSize: 11, fontWeight: 700, padding: "1px 7px", minWidth: 20, textAlign: "center" }}>
-          {badge}
-        </span>
-      )}
     </Nav.Link>
   )
 
@@ -272,42 +248,6 @@ const DoctorDashboard = () => {
         )
       }
 
-      case "notices": {
-        const PRIORITY_STYLES = {
-          High:   { bg: "#FEF2F2", color: "#DC2626", border: "#FECACA" },
-          Medium: { bg: "#FEFCE8", color: "#CA8A04", border: "#FDE68A" },
-          Low:    { bg: "#F0FDF4", color: "#16A34A", border: "#BBF7D0" },
-        }
-        return (
-          <>
-            <h5 className="fw-bold mb-1">📢 Notices</h5>
-            <p className="text-muted mb-4" style={{ fontSize: 13 }}>Notices from your hospital admin</p>
-            {notices.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "48px 0" }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>📢</div>
-                <p style={{ color: "#94A3B8", fontSize: 14 }}>No active notices at the moment</p>
-              </div>
-            ) : notices.map(n => {
-              const p = PRIORITY_STYLES[n.priority] || PRIORITY_STYLES.Medium
-              return (
-                <Card key={n.id} className="mb-3 border-0" style={{ borderRadius: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", borderLeft: `4px solid ${p.border}` }}>
-                  <Card.Body className="p-3">
-                    <div className="d-flex justify-content-between align-items-start mb-1">
-                      <div className="fw-semibold" style={{ color: "#0F172A", fontSize: 14 }}>{n.title}</div>
-                      <span style={{ background: p.bg, color: p.color, border: `1px solid ${p.border}`, borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 500, whiteSpace: "nowrap", marginLeft: 8 }}>{n.priority}</span>
-                    </div>
-                    <p style={{ color: "#475569", fontSize: 13.5, margin: "4px 0 8px" }}>{n.message}</p>
-                    <div style={{ fontSize: 11, color: "#94A3B8" }}>
-                      {new Date(n.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
-                    </div>
-                  </Card.Body>
-                </Card>
-              )
-            })}
-          </>
-        )
-      }
-
       default: return null
     }
   }
@@ -325,7 +265,6 @@ const DoctorDashboard = () => {
         <Nav className="flex-column">
           {navLink("overview", "📊", "Dashboard")}
           {navLink("appointments", "📅", "Appointments")}
-          {navLink("notices", "📢", "Notices", unreadCount)}
           {navLink("profile", "👤", "My Profile")}
           {navLink("password", "🔒", "Change Password")}
           <hr />

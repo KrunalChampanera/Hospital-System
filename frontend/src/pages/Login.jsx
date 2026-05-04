@@ -48,6 +48,8 @@ const Login = () => {
           navigate("/admin-dashboard")
         } else if (res.data.role === "doctor") {
           navigate("/doctor-dashboard")
+        } else if (res.data.role === "staff") {
+          navigate("/staff-dashboard")
         }
       }
     } catch (err) {
@@ -103,7 +105,7 @@ const Login = () => {
 
                   <div className="d-flex justify-content-between align-items-center mb-4">
                     <Form.Check type="checkbox" label="Remember me" style={{ color: "#718096" }} />
-                    <a href="#" style={{ color: "#667eea", textDecoration: "none", fontSize: "14px" }}>Forgot Password?</a>
+                    <a href="/forgot-password" style={{ color: "#667eea", textDecoration: "none", fontWeight: "600", fontSize: "14px" }}>Forgot Password?</a>
                   </div>
 
                   <Button
@@ -121,9 +123,6 @@ const Login = () => {
                 <div className="text-center mt-4">
                   <p style={{ color: "#718096", fontSize: "14px" }}>
                     Don't have an account? <a href="/register" style={{ color: "#667eea", textDecoration: "none", fontWeight: "600" }}>Register as Admin</a>
-                  </p>
-                  <p style={{ color: "#718096", fontSize: "14px", marginTop: 4 }}>
-                    Patient? <a href="/book" style={{ color: "#059669", textDecoration: "none", fontWeight: "600" }}>Book an Appointment →</a>
                   </p>
                 </div>
               </Card.Body>

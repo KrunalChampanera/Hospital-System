@@ -1,5 +1,34 @@
 const db = require("../config/db")
 
+const DEFAULT_DESIGNATIONS = [
+  "Doctor", "Senior Doctor", "Consultant", "Resident Doctor", "Intern Doctor",
+  "Nurse", "Senior Nurse", "Head Nurse", "Nursing Assistant",
+  "Receptionist", "Front Desk Executive",
+  "Pharmacist", "Senior Pharmacist",
+  "Lab Incharge", "Lab Technician", "Lab Assistant",
+  "Radiologist", "X-Ray Technician", "MRI Technician",
+  "Physiotherapist", "Occupational Therapist",
+  "Medical Records Officer", "Data Entry Operator",
+  "Hospital Administrator", "HR Manager", "Accounts Officer",
+  "Ambulance Driver", "Ward Boy", "Housekeeping Staff", "Security Guard",
+  "Dietitian", "Nutritionist", "Counselor", "Social Worker"
+]
+
+exports.seedDesignations = () => new Promise((resolve) => {
+  db.query("SELECT name FROM designations", (err, rows) => {
+    if (err) return resolve()
+    const existing = new Set(rows.map(r => r.name.toLowerCase()))
+    const toInsert = DEFAULT_DESIGNATIONS.filter(n => !existing.has(n.toLowerCase()))
+    if (!toInsert.length) return resolve()
+    const values = toInsert.map(name => [name, "Active"])
+    db.query("INSERT INTO designations (name, status) VALUES ?", [values], (e) => {
+      if (e) console.error("Designation seed error:", e.message)
+      else console.log(`Seeded ${toInsert.length} designations`)
+      resolve()
+    })
+  })
+})
+
 exports.createDesignation = (req, res) => {
   const { name } = req.body
   if (!name) return res.status(400).json({ success: false, message: "Name is required" })

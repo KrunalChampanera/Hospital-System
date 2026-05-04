@@ -29,7 +29,22 @@ exports.login = (req, res) => {
     if (!results.length) {
       return db.query("SELECT id, hospital_id, name, email, password, status FROM doctors WHERE email = ?", [normalizedEmail], (err2, docResults) => {
         if (err2) return res.status(500).json({ success: false, message: "Database error" })
-        if (!docResults.length) return res.status(401).json({ success: false, message: "Invalid credentials" })
+        if (!docResults.length) {
+          return db.query("SELECT id, hospital_id, name, email, password, status FROM staff WHERE email = ?", [normalizedEmail], (err3, staffResults) => {
+            if (err3) return res.status(500).json({ success: false, message: "Database error" })
+            if (!staffResults.length) return res.status(401).json({ success: false, message: "Invalid credentials" })
+            const staff = staffResults[0]
+            if (staff.status !== "Active") return res.status(401).json({ success: false, message: "Account is inactive" })
+            if (!staff.password) return res.status(401).json({ success: false, message: "No password set. Contact your admin." })
+            const isMatch = bcrypt.compareSync(password, staff.password)
+            if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" })
+            const token = jwt.sign({ id: staff.id, role: "staff", hospital_id: staff.hospital_id }, process.env.JWT_SECRET, { expiresIn: "8h" })
+            return res.json({
+              success: true, token, role: "staff",
+              user: { id: staff.id, hospital_id: staff.hospital_id, email: staff.email, name: staff.name, role: "staff" }
+            })
+          })
+        }
 
         const doctor = docResults[0]
         if (doctor.status !== "Active") return res.status(401).json({ success: false, message: "Account is inactive" })
